@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,6 +17,8 @@ public class Plane : MonoBehaviour
     float landingTimer;
     public List<Sprite> sprites;
     SpriteRenderer spriteRenderer;
+    public Color red;
+    public Color white;
 
     private void Start()
     {
@@ -25,6 +28,8 @@ public class Plane : MonoBehaviour
 
         rigidbody = GetComponent<Rigidbody2D>();
 
+        spriteRenderer = GetComponent<SpriteRenderer>();
+
         transform.position = new Vector3 (Random.Range(-5, 5), Random.Range(-5,5), 0);
         transform.rotation = Quaternion.Euler(0, 0, Random.Range(0,360));
 
@@ -32,6 +37,21 @@ public class Plane : MonoBehaviour
 
         spriteRenderer.sprite = sprites[Random.Range(0, 4)];
         transform.localScale = new Vector3(5, 5, 1);
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        spriteRenderer.color = white;
+    }
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        spriteRenderer.color = red;
+        float dist = Vector3.Distance(collision.transform.position, transform.position);
+        if (dist < 1)
+        {
+            Destroy(gameObject);
+            Destroy(collision);
+        }
     }
     private void FixedUpdate()
     {
@@ -47,7 +67,7 @@ public class Plane : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetKey(KeyCode.Space))
+        if (Input.GetKey(KeyCode.Space))
         {
             landingTimer += 0.5f * Time.deltaTime;
             float interpolation = landing.Evaluate(landingTimer);
@@ -55,7 +75,10 @@ public class Plane : MonoBehaviour
             {
                 Destroy(gameObject);
             }
+            else
+            { 
             transform.localScale = Vector3.Lerp(Vector3.one, Vector3.zero, interpolation);
+        }
         }
 
         lineRenderer.SetPosition(0, transform.position);
@@ -80,6 +103,10 @@ public class Plane : MonoBehaviour
         lineRenderer.positionCount = 1;
         lineRenderer.SetPosition(0, transform.position);
     }
+    private void OnBecameInvisible()
+    {
+        Destroy(gameObject);
+    }
 
     private void OnMouseDrag()
     {
@@ -91,6 +118,6 @@ public class Plane : MonoBehaviour
             lineRenderer.SetPosition(lineRenderer.positionCount - 1, newPosition);
             lastPosition = newPosition;
         }
-        
+
     }
 }
